@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import sqlite3
 from typing import List, Dict, Optional
 from contextlib import contextmanager
+import pandas as pd
+import io
+from datetime import datetime
 
 app = FastAPI(title="Map Fee Analyzer")
 
@@ -155,6 +158,80 @@ def get_comparison():
             })
         
         return comparison
+
+@app.get("/api/data-info")
+def get_data_info():
+    """Get information about current data."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        
+        # Get total locations
+        cursor.execute("SELECT COUNT(*) FROM locations")
+        total_locations = cursor.fetchone()[0]
+        
+        # Get total cities
+        cursor.execute("SELECT COUNT(DISTINCT city) FROM locations")
+        total_cities = cursor.fetchone()[0]
+        
+        # Get last updated (we'll use the created date of the most recent entry)
+        cursor.execute("SELECT MAX(created) FROM locations")
+        last_updated = cursor.fetchone()[0] or datetime.now().isoformat()
+        
+        return {
+            "total_locations": total_locations,
+            "total_cities": total_cities,
+            "last_updated": last_updated
+        }
+
+@app.post("/api/upload-data")
+async def upload_data(file: UploadFile = File(...)):
+    """Upload and import CSV data."""
+    try:
+        # Read CSV content
+        contents = await file.read()
+        df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
+        
+        # Validate required columns
+        required_columns = [
+            'ID', 'CITY', 'INSTALLATION_FEE', 'QUARTERLY_FEE', 'LATITUDE', 'LONGITUDE'
+        ]
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        # Connect to database
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        # Clear existing data
+        cursor.execute("DELETE FROM locations")
+        
+        # Import new data
+        df.to_sql('locations', conn, if_exists='append', index=False)
+        
+        conn.commit()
+        
+        # Get stats
+        cursor.execute("SELECT COUNT(*) FROM locations")
+        records_imported = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(DISTINCT city) FROM locations")
+        cities_found = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return {
+            "success": True,
+            "records_imported": records_imported,
+            "cities_found": cities_found
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
