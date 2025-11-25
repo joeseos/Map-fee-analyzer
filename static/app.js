@@ -209,6 +209,110 @@ document.getElementById('city-select').addEventListener('change', (e) => {
     }
 });
 
+// File upload controls
+const uploadBox = document.getElementById('upload-box');
+const fileInput = document.getElementById('file-input');
+const uploadStatus = document.getElementById('upload-status');
+const currentDataInfo = document.getElementById('current-data-info');
+
+// Load current data info
+async function loadCurrentDataInfo() {
+    try {
+        const response = await fetch('/api/data-info');
+        const info = await response.json();
+        
+        currentDataInfo.innerHTML = `
+            <strong>Current Data:</strong><br>
+            ${info.total_locations} locations across ${info.total_cities} cities<br>
+            Last updated: ${new Date(info.last_updated).toLocaleString()}
+        `;
+        currentDataInfo.classList.add('show');
+    } catch (error) {
+        console.error('Error loading data info:', error);
+    }
+}
+
+// Handle file upload
+async function uploadFile(file) {
+    if (!file) return;
+    
+    if (!file.name.endsWith('.csv')) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = '❌ Please upload a CSV file';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    uploadStatus.className = 'upload-status loading';
+    uploadStatus.textContent = '⏳ Uploading and processing...';
+    
+    try {
+        const response = await fetch('/api/upload-data', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            uploadStatus.className = 'upload-status success';
+            uploadStatus.textContent = `✅ Success! Imported ${result.records_imported} records from ${result.cities_found} cities`;
+            
+            // Reload the data on the map
+            await loadCities();
+            await loadLocations();
+            await loadComparison();
+            await loadCurrentDataInfo();
+            
+            // Clear after 5 seconds
+            setTimeout(() => {
+                uploadStatus.style.display = 'none';
+            }, 5000);
+        } else {
+            uploadStatus.className = 'upload-status error';
+            uploadStatus.textContent = `❌ Error: ${result.detail || 'Failed to upload file'}`;
+        }
+    } catch (error) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = `❌ Error: ${error.message}`;
+    }
+}
+
+// Click to upload
+uploadBox.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// File selected
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        uploadFile(file);
+    }
+});
+
+// Drag and drop
+uploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBox.classList.add('drag-over');
+});
+
+uploadBox.addEventListener('dragleave', () => {
+    uploadBox.classList.remove('drag-over');
+});
+
+uploadBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBox.classList.remove('drag-over');
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        uploadFile(file);
+    }
+});
+
 // Settings Modal Controls
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
@@ -239,6 +343,9 @@ settingsBtn.addEventListener('click', () => {
     highThresholdValue.textContent = `${settings.highThreshold * 100}%`;
     lowThresholdValue.textContent = `${settings.lowThreshold * 100}%`;
     updatePreview();
+    
+    // Load current data info
+    loadCurrentDataInfo();
     
     settingsModal.classList.add('show');
 });
