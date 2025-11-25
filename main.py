@@ -126,6 +126,8 @@ def get_locations(
                 "street": row["street"],
                 "streetno": row["streetno"],
                 "zip": row["zip"],
+                "supplier": row.get("supplier", ""),
+                "accesstype": row.get("accesstype", ""),
                 "installation_fee": row["installation_fee"],
                 "quarterly_fee": row["quarterly_fee"],
                 "latitude": row["latitude"],
