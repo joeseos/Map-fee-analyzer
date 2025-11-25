@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Fee Analyzer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📍 Map Fee Analyzer</h1>
+            <p>Compare installation and quarterly fees across Swedish cities</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <label for="city-select">Select City:</label>
+                <select id="city-select">
+                    <option value="">All Cities</option>
+                </select>
+            </div>
+            
+            <div class="stats-box" id="stats-box">
+                <div class="stat-card">
+                    <h3>Avg Installation Fee</h3>
+                    <p class="stat-value" id="avg-installation">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg Quarterly Fee</h3>
+                    <p class="stat-value" id="avg-quarterly">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Locations</h3>
+                    <p class="stat-value" id="location-count">-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <div class="comparison-section">
+            <h2>City Comparison</h2>
+            <div id="comparison-table"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
