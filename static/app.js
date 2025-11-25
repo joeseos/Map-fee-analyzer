@@ -12,10 +12,29 @@ let markers = [];
 let allLocations = [];
 let allCities = [];
 
+// Settings - color thresholds (as decimals, e.g., 0.20 = 20%)
+let settings = {
+    highThreshold: 0.20,  // 20% above average
+    lowThreshold: 0.20    // 20% below average
+};
+
+// Load settings from localStorage if available
+function loadSettings() {
+    const saved = localStorage.getItem('mapFeeSettings');
+    if (saved) {
+        settings = JSON.parse(saved);
+    }
+}
+
+// Save settings to localStorage
+function saveSettings() {
+    localStorage.setItem('mapFeeSettings', JSON.stringify(settings));
+}
+
 // Color coding for fees
 function getFeeColor(fee, avgFee) {
-    if (fee > avgFee * 1.2) return '#e74c3c'; // High - red
-    if (fee < avgFee * 0.8) return '#27ae60'; // Low - green
+    if (fee > avgFee * (1 + settings.highThreshold)) return '#e74c3c'; // High - red
+    if (fee < avgFee * (1 - settings.lowThreshold)) return '#27ae60'; // Low - green
     return '#f39c12'; // Medium - orange
 }
 
@@ -190,8 +209,92 @@ document.getElementById('city-select').addEventListener('change', (e) => {
     }
 });
 
+// Settings Modal Controls
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettings = document.getElementById('close-settings');
+const highThresholdSlider = document.getElementById('high-threshold');
+const lowThresholdSlider = document.getElementById('low-threshold');
+const highThresholdValue = document.getElementById('high-threshold-value');
+const lowThresholdValue = document.getElementById('low-threshold-value');
+const applySettings = document.getElementById('apply-settings');
+const resetSettings = document.getElementById('reset-settings');
+
+// Update preview values
+function updatePreview() {
+    const high = parseInt(highThresholdSlider.value);
+    const low = parseInt(lowThresholdSlider.value);
+    
+    document.getElementById('preview-high').textContent = `${100 + high}%`;
+    document.getElementById('preview-high-2').textContent = `${100 + high}%`;
+    document.getElementById('preview-low').textContent = `${100 - low}%`;
+    document.getElementById('preview-low-2').textContent = `${100 - low}%`;
+}
+
+// Open settings modal
+settingsBtn.addEventListener('click', () => {
+    // Set sliders to current settings
+    highThresholdSlider.value = settings.highThreshold * 100;
+    lowThresholdSlider.value = settings.lowThreshold * 100;
+    highThresholdValue.textContent = `${settings.highThreshold * 100}%`;
+    lowThresholdValue.textContent = `${settings.lowThreshold * 100}%`;
+    updatePreview();
+    
+    settingsModal.classList.add('show');
+});
+
+// Close settings modal
+closeSettings.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+});
+
+// Close modal when clicking outside
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+        settingsModal.classList.remove('show');
+    }
+});
+
+// Update slider value displays
+highThresholdSlider.addEventListener('input', (e) => {
+    highThresholdValue.textContent = `${e.target.value}%`;
+    updatePreview();
+});
+
+lowThresholdSlider.addEventListener('input', (e) => {
+    lowThresholdValue.textContent = `${e.target.value}%`;
+    updatePreview();
+});
+
+// Apply settings
+applySettings.addEventListener('click', () => {
+    settings.highThreshold = parseInt(highThresholdSlider.value) / 100;
+    settings.lowThreshold = parseInt(lowThresholdSlider.value) / 100;
+    saveSettings();
+    
+    // Refresh the map with new colors
+    const currentCity = document.getElementById('city-select').value;
+    if (currentCity) {
+        loadLocations(currentCity);
+    } else {
+        loadLocations();
+    }
+    
+    settingsModal.classList.remove('show');
+});
+
+// Reset to defaults
+resetSettings.addEventListener('click', () => {
+    highThresholdSlider.value = 20;
+    lowThresholdSlider.value = 20;
+    highThresholdValue.textContent = '20%';
+    lowThresholdValue.textContent = '20%';
+    updatePreview();
+});
+
 // Initialize application
 async function init() {
+    loadSettings();
     await loadCities();
     await loadLocations();
     await loadComparison();
