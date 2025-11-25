@@ -12,8 +12,8 @@ COPY import_data.py .
 COPY sample_data.csv .
 COPY static/ ./static/
 
-# Import data on build
-RUN python import_data.py sample_data.csv
+# Import data on build (ignore errors if it fails)
+RUN python import_data.py sample_data.csv || echo "Warning: Sample data import failed, continuing..."
 
 # Expose port
 EXPOSE 8000
