@@ -83,7 +83,7 @@ function displayLocations(locations) {
         const color = getFeeColor(location.quarterly_fee, avgQuarterly);
         const icon = createMarkerIcon(color);
         
-        const marker = L.marker([location.latitude, location.longitude], { icon })
+const marker = L.marker([location.latitude, location.longitude], { icon })
             .addTo(map)
             .bindPopup(`
                 <div class="popup-content">
@@ -91,9 +91,11 @@ function displayLocations(locations) {
                     <p><strong>City:</strong> ${location.city}</p>
                     <p><strong>Address:</strong> ${location.street} ${location.streetno}</p>
                     <p><strong>Zip:</strong> ${location.zip}</p>
+                    ${location.supplier ? `<p><strong>Supplier:</strong> ${location.supplier}</p>` : ''}
+                    ${location.accesstype ? `<p><strong>Access Type:</strong> ${location.accesstype}</p>` : ''}
                     <div class="fee-info">
                         <p><strong>Installation Fee:</strong> ${location.installation_fee.toLocaleString()} kr</p>
-                        <p><strong>Quarterly Fee:</strong> ${location.quarterly_fee.toLocaleString()} kr</p>
+                        <p><strong>Monthly Fee:</strong> ${location.quarterly_fee.toLocaleString()} kr</p>
                     </div>
                 </div>
             `);
