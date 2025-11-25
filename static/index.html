@@ -20,6 +20,7 @@
                 <select id="city-select">
                     <option value="">All Cities</option>
                 </select>
+                <button id="settings-btn" class="settings-btn" title="Settings">⚙️ Settings</button>
             </div>
             
             <div class="stats-box" id="stats-box">
@@ -34,6 +35,62 @@
                 <div class="stat-card">
                     <h3>Locations</h3>
                     <p class="stat-value" id="location-count">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ Settings</h2>
+                    <button class="close-btn" id="close-settings">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h3>Color Thresholds</h3>
+                    <p class="help-text">Adjust how sensitive the color coding is to fee differences</p>
+                    
+                    <div class="setting-group">
+                        <label for="high-threshold">
+                            🔴 High Fee Threshold (above average by %)
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="high-threshold" min="5" max="50" value="20" step="5">
+                            <span class="slider-value" id="high-threshold-value">20%</span>
+                        </div>
+                        <p class="setting-description">Locations with fees this much above average will be marked red</p>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="low-threshold">
+                            🟢 Low Fee Threshold (below average by %)
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="low-threshold" min="5" max="50" value="20" step="5">
+                            <span class="slider-value" id="low-threshold-value">20%</span>
+                        </div>
+                        <p class="setting-description">Locations with fees this much below average will be marked green</p>
+                    </div>
+
+                    <div class="color-preview">
+                        <div class="preview-item">
+                            <div class="preview-marker" style="background-color: #e74c3c;"></div>
+                            <span>High (Red): > <span id="preview-high">120%</span> of average</span>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-marker" style="background-color: #f39c12;"></div>
+                            <span>Medium (Orange): <span id="preview-low">80%</span> - <span id="preview-high-2">120%</span> of average</span>
+                        </div>
+                        <div class="preview-item">
+                            <div class="preview-marker" style="background-color: #27ae60;"></div>
+                            <span>Low (Green): < <span id="preview-low-2">80%</span> of average</span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="reset-settings" class="btn btn-secondary">Reset to Defaults</button>
+                        <button id="apply-settings" class="btn btn-primary">Apply Changes</button>
+                    </div>
                 </div>
             </div>
         </div>
