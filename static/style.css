@@ -81,13 +81,12 @@ header p {
 }
 
 .settings-btn {
-    padding: 8px 12px;
-    background: #3498db;
-    color: white;
+    padding: 8px;
+    background: transparent;
+    color: #3498db;
     border: none;
-    border-radius: 6px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 24px;
     transition: all 0.3s;
     display: flex;
     align-items: center;
@@ -97,8 +96,8 @@ header p {
 }
 
 .settings-btn:hover {
-    background: #2980b9;
-    transform: rotate(45deg);
+    color: #2980b9;
+    transform: rotate(90deg);
 }
 
 /* Modal Styles */
