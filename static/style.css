@@ -47,11 +47,17 @@ header p {
     margin-bottom: 20px;
 }
 
-.search-box label {
-    display: block;
-    font-weight: 600;
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 8px;
+}
+
+.search-box label {
+    font-weight: 600;
     color: #2c3e50;
+    margin: 0;
 }
 
 #city-select {
@@ -75,19 +81,24 @@ header p {
 }
 
 .settings-btn {
-    margin-left: 10px;
-    padding: 10px 20px;
+    padding: 8px 12px;
     background: #3498db;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s;
+    font-size: 18px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
 }
 
 .settings-btn:hover {
     background: #2980b9;
+    transform: rotate(45deg);
 }
 
 /* Modal Styles */
