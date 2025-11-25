@@ -49,6 +49,22 @@
                     <button class="close-btn" id="close-settings">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <h3>Data Upload</h3>
+                    <p class="help-text">Upload a CSV file to import location data</p>
+                    
+                    <div class="upload-section">
+                        <div class="upload-box" id="upload-box">
+                            <div class="upload-icon">📁</div>
+                            <p class="upload-text">Click to upload or drag and drop</p>
+                            <p class="upload-hint">CSV file with location data</p>
+                            <input type="file" id="file-input" accept=".csv" hidden>
+                        </div>
+                        <div id="upload-status" class="upload-status"></div>
+                        <div id="current-data-info" class="current-data-info"></div>
+                    </div>
+
+                    <div class="divider"></div>
+
                     <h3>Color Thresholds</h3>
                     <p class="help-text">Adjust how sensitive the color coding is to fee differences</p>
                     
