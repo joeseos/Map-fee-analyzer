@@ -191,10 +191,8 @@ async def upload_data(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
         
-        # Validate required columns
-        required_columns = [
-            'ID', 'CITY', 'INSTALLATION_FEE', 'QUARTERLY_FEE', 'LATITUDE', 'LONGITUDE'
-        ]
+        # Validate required columns for your format
+        required_columns = ['ID', 'CITY', 'INSTALLATION', 'MONTHLYFEE', 'RT90X', 'RT90Y']
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
@@ -203,15 +201,80 @@ async def upload_data(file: UploadFile = File(...)):
                 detail=f"Missing required columns: {', '.join(missing_columns)}"
             )
         
+        # Convert RT90 coordinates to WGS84
+        coordinates = df.apply(
+            lambda row: convert_rt90_to_wgs84(row['RT90X'], row['RT90Y']), 
+            axis=1
+        )
+        df['LATITUDE'] = coordinates.apply(lambda x: x[0])
+        df['LONGITUDE'] = coordinates.apply(lambda x: x[1])
+        
+        # Rename columns to match database schema
+        df = df.rename(columns={
+            'INSTALLATION': 'INSTALLATION_FEE',
+            'MONTHLYFEE': 'QUARTERLY_FEE'
+        })
+        
+        # Drop rows with invalid coordinates
+        df = df.dropna(subset=['LATITUDE', 'LONGITUDE'])
+        
+        if len(df) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="No valid locations found (all coordinates were invalid)"
+            )
+        
+        # Select and rename columns for database (including SUPPLIER and ACCESSTYPE)
+        df_import = pd.DataFrame({
+            'id': df['ID'],
+            'created': df['CREATED'],
+            'bmt_id': df['BMT_ID'],
+            'name': df['NAME'],
+            'businesstype': df['BUSINESSTYPE'],
+            'city': df['CITY'],
+            'street': df['STREET'],
+            'streetno': df['STREETNO'],
+            'zip': df['ZIP'],
+            'property': df['PROPERTY'],
+            'supplier': df.get('SUPPLIER', ''),  # Handle optional columns
+            'accesstype': df.get('ACCESSTYPE', ''),  # Handle optional columns
+            'installation_fee': df['INSTALLATION_FEE'],
+            'quarterly_fee': df['QUARTERLY_FEE'],
+            'latitude': df['LATITUDE'],
+            'longitude': df['LONGITUDE']
+        })
+        
         # Connect to database
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
+        
+        # Create table with all columns if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS locations (
+                id INTEGER,
+                created TEXT,
+                bmt_id TEXT,
+                name TEXT,
+                businesstype TEXT,
+                city TEXT,
+                street TEXT,
+                streetno TEXT,
+                zip TEXT,
+                property TEXT,
+                supplier TEXT,
+                accesstype TEXT,
+                installation_fee REAL,
+                quarterly_fee REAL,
+                latitude REAL,
+                longitude REAL
+            )
+        """)
         
         # Clear existing data
         cursor.execute("DELETE FROM locations")
         
         # Import new data
-        df.to_sql('locations', conn, if_exists='append', index=False)
+        df_import.to_sql('locations', conn, if_exists='append', index=False)
         
         conn.commit()
         
