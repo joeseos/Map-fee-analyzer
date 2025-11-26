@@ -7,10 +7,59 @@ from contextlib import contextmanager
 import pandas as pd
 import io
 from datetime import datetime
+from pyproj import Transformer
+import os
 
 app = FastAPI(title="Map Fee Analyzer")
 
 DB_FILE = "database.db"
+
+# RT90 to WGS84 transformer
+rt90_to_wgs84 = Transformer.from_crs("EPSG:3021", "EPSG:4326", always_xy=True)
+
+def init_database():
+    """Initialize database with empty table if it doesn't exist."""
+    print(f"Initializing database at {DB_FILE}...")
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS locations (
+            id INTEGER,
+            created TEXT,
+            bmt_id TEXT,
+            name TEXT,
+            businesstype TEXT,
+            city TEXT,
+            street TEXT,
+            streetno TEXT,
+            zip TEXT,
+            property TEXT,
+            supplier TEXT,
+            accesstype TEXT,
+            installation_fee REAL,
+            quarterly_fee REAL,
+            latitude REAL,
+            longitude REAL
+        )
+    """)
+    conn.commit()
+    
+    # Verify table was created
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='locations'")
+    if cursor.fetchone():
+        print("✅ Database table 'locations' created successfully")
+    else:
+        print("❌ Failed to create table 'locations'")
+    
+    conn.close()
+
+# Initialize database immediately when module loads
+init_database()
+
+@app.on_event("startup")
+async def startup_event():
+    """Ensure database is initialized on startup."""
+    init_database()
 
 @contextmanager
 def get_db():
